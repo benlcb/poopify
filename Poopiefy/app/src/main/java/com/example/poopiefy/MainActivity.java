@@ -2,8 +2,10 @@ package com.example.poopiefy;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +22,10 @@ import uk.co.lemberg.motiondetectionlib.MotionDetector;
 public class MainActivity extends AppCompatActivity {
 
     private final String CHANNEL_ID = "ch1";
+    Context myContext;
+    NotificationCompat.Builder builder;
+    NotificationManagerCompat notificationManager;
+    int detection_count = 0;
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private MotionDetector motionDetector;
@@ -29,13 +35,20 @@ public class MainActivity extends AppCompatActivity {
     private DateFormat dateFormat;
     private DateFormat timeFormat;
 
+
+
     private final MotionDetector.Listener gestureListener = new MotionDetector.Listener() {
         @Override
         public void onGestureRecognized(MotionDetector.GestureType gestureType) {
             //motion detected
-            showToast(gestureType.toString());
-            addLog("Gesture detected: " + gestureType);
-            Log.d(TAG, "Gesture detected: " + gestureType);
+            //showToast(gestureType.toString());
+            //addLog("Gesture detected: " + gestureType);
+            //Log.d(TAG, "Gesture detected: " + gestureType);
+
+            if(detection_count++ % 2 == 0) {
+                // notificationId is a unique int for each notification that you must define
+                notificationManager.notify(1, builder.build());
+            }
         }
     };
 
@@ -56,8 +69,18 @@ public class MainActivity extends AppCompatActivity {
         scrollLogs = findViewById(R.id.scrollLogs);
         textLogs = findViewById(R.id.textLogs);
 
+        myContext = this.getApplicationContext();
+
         //enable notifications
         createNotificationChannel();
+
+        builder = new NotificationCompat.Builder(myContext, "ch1")
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setContentTitle("Cleanliness is a virtue.")
+                .setContentText("Please wash your hands, you dirty pig!")
+                .setPriority(NotificationCompat.PRIORITY_MAX);
+
+        notificationManager = NotificationManagerCompat.from(this);
 
         //Motion Detector
         motionDetector = new MotionDetector(this, gestureListener);
@@ -106,10 +129,9 @@ public class MainActivity extends AppCompatActivity {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(R.string.channel_name);
-            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            CharSequence name = "ch1";
+            String description = "Washing hands channel";
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_HIGH);
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
